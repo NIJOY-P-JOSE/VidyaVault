@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}VidyaVault - Project Showcase Platform{% endblock %}</title>
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <style>
+        :root {
+            --primary-color: #004E89;
+            --accent-color: #00A8E8;
+            --light-bg: #F8F9FA;
+            --dark-bg: #121212;
+            --dark-surface: #1E1E1E;
+        }
+        
+         body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--bs-body-bg);
+            color: var(--bs-body-color);
+        }
+        
+        [data-bs-theme="dark"] {
+            --bs-body-bg: var(--dark-bg);
+            --bs-body-color: #ffffff;
+        }
+        
+        .navbar-brand {
+            font-weight: 700;
+            color: var(--primary-color) !important;
+        }
+        
+        [data-bs-theme="dark"] .navbar .nav-link,
+        [data-bs-theme="dark"] .navbar .navbar-brand,
+        [data-bs-theme="dark"] #navbarNav  {
+            color: #00a8e8;
+        }
+        
+       [data-bs-theme="dark"] .navbar {
+  background-color: #1E1E1E !important; /* or your preferred dark color */
+}
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+        
+        .btn-primary:hover {
+            background-color: var(--accent-color);
+            border-color: var(--accent-color);
+        }
+        
+        .text-primary {
+            color: var(--primary-color) !important;
+        }
+        
+        .bg-primary {
+            background-color: var(--primary-color) !important;
+        }
+        
+        .card {
+            border: none;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            transition: transform 0.2s ease-in-out;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .hero-section {
+            background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+            color: white;
+            padding: 80px 0;
+        }
+        
+        .stats-card {
+            background-color: var(--bs-card-bg);
+            color: var(--bs-body-color);
+        }
+        
+        .project-card {
+            transition: all 0.3s ease;
+        }
+        
+        .project-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+        }
+        
+        .tech-badge {
+            background-color: var(--accent-color);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            margin: 2px;
+            display: inline-block;
+        }
+        
+        .like-btn {
+            border: none;
+            background: none;
+            color: #dc3545;
+            font-size: 1.2em;
+            transition: all 0.2s ease;
+        }
+        
+        .like-btn:hover {
+            transform: scale(1.1);
+        }
+        
+        .like-btn.liked {
+            color: #dc3545;
+        }
+        
+        .footer {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 40px 0;
+            margin-top: 80px;
+        }
+        
+        .theme-toggle {
+            background: none;
+            border: none;
+            color: inherit;
+            font-size: 1.2em;
+        }
+    </style>
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm sticky-top">
+        <div class="container">
+            <a class="navbar-brand" href="{% url 'home' %}">
+                <i class="fas fa-graduation-cap me-2"></i>VidyaVault
+            </a>
+            
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'home' %}">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'project_list' %}">Explore Projects</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'leaderboard' %}">Leaderboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'about' %}">About</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/admin/login/" title="Admin Login">
+                            <i class="fas fa-user-shield me-1"></i>
+                        </a>
+                    </li>
+
+                </ul>
+                
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <button class="theme-toggle" onclick="toggleTheme()">
+                            <i class="fas fa-moon" id="theme-icon"></i>
+                        </button>
+                    </li>
+                    {% if user.is_authenticated %}
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-user me-1"></i>{{ user.first_name|default:user.username }}
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="{% url 'dashboard' %}">Dashboard</a></li>
+                                <li><a class="dropdown-item" href="{% url 'my_profile' %}">My Profile</a></li>
+                                <li><a class="dropdown-item" href="{% url 'upload_project' %}">Upload Project</a></li>
+                                {% if user.userprofile.role == 'admin' %}
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item" href="{% url 'admin_review' %}">Review Projects</a></li>
+                                {% endif %}
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="{% url 'logout' %}">Logout</a></li>
+                            </ul>
+                        </li>
+                    {% else %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'login' %}">Login</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="btn btn-primary ms-2" href="{% url 'register' %}">Sign Up</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Messages -->
+    {% if messages %}
+        <div class="container mt-3">
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <!-- Main Content -->
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5><i class="fas fa-graduation-cap me-2"></i>VidyaVault</h5>
+                    <p>Empowering students to showcase their academic projects and connect with peers.</p>
+                </div>
+                <div class="col-md-3">
+                    <h6>Quick Links</h6>
+                    <ul class="list-unstyled">
+                        <li><a href="{% url 'home' %}" class="text-light text-decoration-none">Home</a></li>
+                        <li><a href="{% url 'project_list' %}" class="text-light text-decoration-none">Projects</a></li>
+                        <li><a href="{% url 'leaderboard' %}" class="text-light text-decoration-none">Leaderboard</a></li>
+                        <li><a href="{% url 'about' %}" class="text-light text-decoration-none">About</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-3">
+                    <h6>Connect</h6>
+                    <div class="d-flex gap-3">
+                        <a href="#" class="text-light"><i class="fab fa-github fa-lg"></i></a>
+                        <a href="#" class="text-light"><i class="fab fa-linkedin fa-lg"></i></a>
+                        <a href="#" class="text-light"><i class="fab fa-twitter fa-lg"></i></a>
+                    </div>
+                </div>
+            </div>
+            <hr class="my-4">
+            <div class="text-center">
+                <p>&copy; 2024 VidyaVault. Built with ❤️ for students.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap 5 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // Theme toggle functionality
+        function toggleTheme() {
+            const html = document.documentElement;
+            const themeIcon = document.getElementById('theme-icon');
+            
+            if (html.getAttribute('data-bs-theme') === 'dark') {
+                html.setAttribute('data-bs-theme', 'light');
+                themeIcon.className = 'fas fa-moon';
+                localStorage.setItem('theme', 'light');
+            } else {
+                html.setAttribute('data-bs-theme', 'dark');
+                themeIcon.className = 'fas fa-sun';
+                localStorage.setItem('theme', 'dark');
+            }
+        }
+        
+        // Load saved theme
+        document.addEventListener('DOMContentLoaded', function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            const html = document.documentElement;
+            const themeIcon = document.getElementById('theme-icon');
+            
+            html.setAttribute('data-bs-theme', savedTheme);
+            themeIcon.className = savedTheme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+        });
+        
+        // Like functionality
+        function toggleLike(projectId) {
+            fetch(`/projects/${projectId}/like/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                    'Content-Type': 'application/json',
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                const likeBtn = document.querySelector(`#like-btn-${projectId}`);
+                const likeCount = document.querySelector(`#like-count-${projectId}`);
+                
+                if (data.liked) {
+                    likeBtn.classList.add('liked');
+                    likeBtn.innerHTML = '<i class="fas fa-heart"></i>';
+                } else {
+                    likeBtn.classList.remove('liked');
+                    likeBtn.innerHTML = '<i class="far fa-heart"></i>';
+                }
+                
+                likeCount.textContent = data.likes_count;
+            });
+        }
+    </script>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,316 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ profile_user.get_full_name|default:profile_user.username }} - Profile{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <!-- Profile Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-3 text-center">
+                            <div class="mb-3">
+                                {% if profile.profile_picture %}
+                                    <img src="{{ profile.profile_picture.url }}" alt="Profile Picture" 
+                                         class="rounded-circle" style="width: 120px; height: 120px; object-fit: cover;">
+                                {% else %}
+                                    <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center mx-auto" 
+                                         style="width: 120px; height: 120px; font-size: 3rem;">
+                                        <i class="fas fa-user"></i>
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <h3>{{ profile_user.get_full_name|default:profile_user.username }}</h3>
+                            <p class="text-muted">{{ profile.role|title }}</p>
+                        </div>
+                        <div class="col-md-9">
+                            <div class="row g-4">
+                                <div class="col-md-6">
+                                    <h6><i class="fas fa-info-circle text-primary me-2"></i>Profile Information</h6>
+                                    <ul class="list-unstyled">
+                                        {% if profile.department %}
+                                            <li><strong>Department:</strong> {{ profile.department }}</li>
+                                        {% endif %}
+                                        {% if profile.batch %}
+                                            <li><strong>Batch:</strong> {{ profile.batch }}</li>
+                                        {% endif %}
+                                        <li><strong>Member since:</strong> {{ profile_user.date_joined|date:"F Y" }}</li>
+                                        <li><strong>Projects:</strong> {{ user_projects.count }}</li>
+                                    </ul>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6><i class="fas fa-chart-line text-primary me-2"></i>Statistics</h6>
+                                    <ul class="list-unstyled">
+                                        <li><strong>Total Score:</strong> {{ profile.get_total_score|default:0 }}</li>
+                                        <li><strong>Total Likes:</strong> {{ profile.get_total_likes|default:0 }}</li>
+                                        <li><strong>Total Views:</strong> 
+                                            {% with total_views=0 %}
+                                                {% for project in user_projects %}
+                                                    {% with total_views=total_views|add:project.views %}{% endwith %}
+                                                {% endfor %}
+                                                {{ total_views }}
+                                            {% endwith %}
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                            
+                            {% if profile.bio %}
+                            <div class="mt-3">
+                                <h6><i class="fas fa-quote-left text-primary me-2"></i>Bio</h6>
+                                <p class="text-muted">{{ profile.bio|linebreaks }}</p>
+                            </div>
+                            {% endif %}
+                            
+                            <!-- Social Links -->
+                            <div class="mt-3">
+                                <h6><i class="fas fa-link text-primary me-2"></i>Links</h6>
+                                <div class="d-flex gap-3">
+                                    {% if profile.github_url %}
+                                        <a href="{{ profile.github_url }}" target="_blank" class="btn btn-outline-dark btn-sm">
+                                            <i class="fab fa-github me-1"></i>GitHub
+                                        </a>
+                                    {% endif %}
+                                    {% if profile.linkedin_url %}
+                                        <a href="{{ profile.linkedin_url }}" target="_blank" class="btn btn-outline-primary btn-sm">
+                                            <i class="fab fa-linkedin me-1"></i>LinkedIn
+                                        </a>
+                                    {% endif %}
+                                    {% if not profile.github_url and not profile.linkedin_url %}
+                                        <span class="text-muted">No social links added</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Skills Chart -->
+        <div class="col-lg-4 mb-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-chart-pie text-primary me-2"></i>Skills & Technologies</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="skillsChart" height="300"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Projects List -->
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-project-diagram text-primary me-2"></i>Projects 
+                        <span class="badge bg-secondary">{{ user_projects.count }}</span>
+                    </h5>
+                    {% if user == profile_user %}
+                        <a href="{% url 'upload_project' %}" class="btn btn-primary btn-sm">
+                            <i class="fas fa-plus me-1"></i>Add Project
+                        </a>
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    {% if user_projects %}
+                        <div class="row g-4">
+                            {% for project in user_projects %}
+                            <div class="col-md-6">
+                                <div class="card project-card h-100">
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between align-items-start mb-2">
+                                            <h6 class="card-title">{{ project.title|truncatechars:35 }}</h6>
+                                            {% if project.score %}
+                                                <span class="badge bg-success">{{ project.score }}/10</span>
+                                            {% else %}
+                                                <span class="badge bg-warning">Pending</span>
+                                            {% endif %}
+                                        </div>
+                                        
+                                        <p class="card-text small text-muted">{{ project.description|truncatewords:15 }}</p>
+                                        
+                                        <!-- Tech Stack -->
+                                        <div class="mb-3">
+                                            {% for tech in project.get_tech_list|slice:":3" %}
+                                                <span class="tech-badge">{{ tech }}</span>
+                                            {% endfor %}
+                                            {% if project.get_tech_list|length > 3 %}
+                                                <span class="tech-badge">+{{ project.get_tech_list|length|add:"-3" }}</span>
+                                            {% endif %}
+                                        </div>
+                                        
+                                        <!-- Stats -->
+                                        <div class="d-flex justify-content-between align-items-center mb-3">
+                                            <div>
+                                                <small class="text-muted me-2">
+                                                    <i class="fas fa-heart me-1"></i>{{ project.likes.count }}
+                                                </small>
+                                                <small class="text-muted me-2">
+                                                    <i class="fas fa-eye me-1"></i>{{ project.views }}
+                                                </small>
+                                                <small class="text-muted">
+                                                    <i class="fas fa-comments me-1"></i>{{ project.comments.count }}
+                                                </small>
+                                            </div>
+                                            <small class="text-muted">{{ project.created_at|date:"M d, Y" }}</small>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="card-footer bg-transparent">
+                                        <div class="d-flex justify-content-between">
+                                            <a href="{% url 'project_detail' project.pk %}" class="btn btn-outline-primary btn-sm">
+                                                <i class="fas fa-eye me-1"></i>View
+                                            </a>
+                                            {% if project.github_url %}
+                                                <a href="{{ project.github_url }}" target="_blank" class="btn btn-outline-dark btn-sm">
+                                                    <i class="fab fa-github me-1"></i>GitHub
+                                                </a>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-folder-open text-muted" style="font-size: 4rem;"></i>
+                            <h5 class="mt-3 text-muted">No projects yet</h5>
+                            {% if user == profile_user %}
+                                <p class="text-muted">Upload your first project to get started!</p>
+                                <a href="{% url 'upload_project' %}" class="btn btn-primary">
+                                    <i class="fas fa-upload me-2"></i>Upload Project
+                                </a>
+                            {% else %}
+                                <p class="text-muted">{{ profile_user.get_full_name|default:profile_user.username }} hasn't uploaded any projects yet.</p>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Achievement Badges (if any) -->
+    {% if profile.get_total_score > 50 or profile.get_total_likes > 20 or user_projects.count > 5 %}
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-trophy text-warning me-2"></i>Achievements</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        {% if profile.get_total_score > 50 %}
+                        <div class="col-md-4">
+                            <div class="d-flex align-items-center">
+                                <div class="bg-warning text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px;">
+                                    <i class="fas fa-star"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-0">High Achiever</h6>
+                                    <small class="text-muted">Total score over 50</small>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        {% if profile.get_total_likes > 20 %}
+                        <div class="col-md-4">
+                            <div class="d-flex align-items-center">
+                                <div class="bg-danger text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px;">
+                                    <i class="fas fa-heart"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-0">Community Favorite</h6>
+                                    <small class="text-muted">Over 20 total likes</small>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        {% if user_projects.count > 5 %}
+                        <div class="col-md-4">
+                            <div class="d-flex align-items-center">
+                                <div class="bg-success text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px;">
+                                    <i class="fas fa-rocket"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-0">Prolific Creator</h6>
+                                    <small class="text-muted">Over 5 projects</small>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Skills Chart
+    fetch(`/api/user-skills/{{ profile_user.username }}/`)
+        .then(response => response.json())
+        .then(data => {
+            const ctx = document.getElementById('skillsChart').getContext('2d');
+            
+            if (data.length === 0) {
+                // Show message if no skills data
+                ctx.font = '16px Arial';
+                ctx.fillStyle = '#6c757d';
+                ctx.textAlign = 'center';
+                ctx.fillText('No skills data available', ctx.canvas.width/2, ctx.canvas.height/2);
+                return;
+            }
+            
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: data.map(item => item.skill),
+                    datasets: [{
+                        data: data.map(item => item.count),
+                        backgroundColor: [
+                            '#004E89', '#00A8E8', '#FF6B6B', '#4ECDC4',
+                            '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD',
+                            '#98D8C8', '#F7DC6F', '#AED6F1', '#F8C471'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                padding: 20,
+                                usePointStyle: true
+                            }
+                        }
+                    }
+                }
+            });
+        })
+        .catch(error => {
+            console.error('Error loading skills data:', error);
+            const ctx = document.getElementById('skillsChart').getContext('2d');
+            ctx.font = '16px Arial';
+            ctx.fillStyle = '#dc3545';
+            ctx.textAlign = 'center';
+            ctx.fillText('Error loading skills data', ctx.canvas.width/2, ctx.canvas.height/2);
+        });
+});
+</script>
+{% endblock %}

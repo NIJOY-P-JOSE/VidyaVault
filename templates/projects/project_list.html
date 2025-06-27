@@ -1,0 +1,185 @@
+{% extends 'base.html' %}
+
+{% block title %}Explore Projects - VidyaVault{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="display-5 mb-3">Explore Projects</h1>
+            <p class="lead text-muted">Discover amazing projects from students across different domains and technologies.</p>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <form method="get" class="row g-3">
+                        <div class="col-md-3">
+                            <label for="search" class="form-label">Search</label>
+                            <input type="text" class="form-control" id="search" name="search" 
+                                   value="{{ current_search }}" placeholder="Search projects...">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="domain" class="form-label">Domain</label>
+                            <select class="form-select" id="domain" name="domain">
+                                <option value="">All Domains</option>
+                                {% for value, label in domain_choices %}
+                                    <option value="{{ value }}" {% if current_domain == value %}selected{% endif %}>
+                                        {{ label }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="tech" class="form-label">Technology</label>
+                            <select class="form-select" id="tech" name="tech">
+                                <option value="">All Technologies</option>
+                                {% for tech in unique_techs %}
+                                    <option value="{{ tech }}" {% if current_tech == tech %}selected{% endif %}>
+                                        {{ tech }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary me-2">
+                                <i class="fas fa-search me-1"></i>Filter
+                            </button>
+                            <a href="{% url 'project_list' %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-times me-1"></i>Clear
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Projects Grid -->
+    <div class="row g-4">
+        {% for project in page_obj %}
+        <div class="col-md-6 col-lg-4">
+            <div class="card project-card h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <h5 class="card-title">{{ project.title|truncatechars:40 }}</h5>
+                        <span class="badge bg-primary">{{ project.get_domain_display }}</span>
+                    </div>
+                    
+                    <p class="card-text text-muted">{{ project.description|truncatewords:20 }}</p>
+                    
+                    <!-- Tech Stack -->
+                    <div class="mb-3">
+                        {% for tech in project.get_tech_list|slice:":4" %}
+                            <span class="tech-badge">{{ tech }}</span>
+                        {% endfor %}
+                        {% if project.get_tech_list|length > 4 %}
+                            <span class="tech-badge">+{{ project.get_tech_list|length|add:"-4" }} more</span>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Project Info -->
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <small class="text-muted">
+                            <i class="fas fa-user me-1"></i>{{ project.owner.get_full_name|default:project.owner.username }}
+                        </small>
+                        {% if project.score %}
+                            <span class="badge bg-success">{{ project.score }}/10</span>
+                        {% else %}
+                            <span class="badge bg-warning">Unscored</span>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Stats -->
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div>
+                            <small class="text-muted me-3">
+                                <i class="fas fa-heart me-1"></i>{{ project.likes.count }}
+                            </small>
+                            <small class="text-muted me-3">
+                                <i class="fas fa-eye me-1"></i>{{ project.views }}
+                            </small>
+                            <small class="text-muted">
+                                <i class="fas fa-comments me-1"></i>{{ project.comments.count }}
+                            </small>
+                        </div>
+                        <small class="text-muted">{{ project.created_at|date:"M d, Y" }}</small>
+                    </div>
+                </div>
+                
+                <div class="card-footer bg-transparent">
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'project_detail' project.pk %}" class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-eye me-1"></i>View Details
+                        </a>
+                        {% if project.github_url %}
+                            <a href="{{ project.github_url }}" target="_blank" class="btn btn-outline-dark btn-sm">
+                                <i class="fab fa-github me-1"></i>GitHub
+                            </a>
+                        {% endif %}
+                        {% if user.is_authenticated %}
+                            <button class="like-btn btn btn-sm" onclick="toggleLike({{ project.pk }})" 
+                                    id="like-btn-{{ project.pk }}">
+                                {% if project.likes.all|length > 0 and user in project.likes.all %}
+                                    <i class="fas fa-heart"></i>
+                                {% else %}
+                                    <i class="far fa-heart"></i>
+                                {% endif %}
+                            </button>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="text-center py-5">
+                <i class="fas fa-search text-muted" style="font-size: 4rem;"></i>
+                <h4 class="mt-3 text-muted">No projects found</h4>
+                <p class="text-muted">Try adjusting your search criteria or browse all projects.</p>
+                <a href="{% url 'project_list' %}" class="btn btn-primary">View All Projects</a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    {% if page_obj.has_other_pages %}
+    <div class="row mt-5">
+        <div class="col-12">
+            <nav aria-label="Projects pagination">
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page=1{% if current_search %}&search={{ current_search }}{% endif %}{% if current_domain %}&domain={{ current_domain }}{% endif %}{% if current_tech %}&tech={{ current_tech }}{% endif %}">First</a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if current_search %}&search={{ current_search }}{% endif %}{% if current_domain %}&domain={{ current_domain }}{% endif %}{% if current_tech %}&tech={{ current_tech }}{% endif %}">Previous</a>
+                        </li>
+                    {% endif %}
+                    
+                    <li class="page-item active">
+                        <span class="page-link">{{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+                    </li>
+                    
+                    {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if current_search %}&search={{ current_search }}{% endif %}{% if current_domain %}&domain={{ current_domain }}{% endif %}{% if current_tech %}&tech={{ current_tech }}{% endif %}">Next</a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if current_search %}&search={{ current_search }}{% endif %}{% if current_domain %}&domain={{ current_domain }}{% endif %}{% if current_tech %}&tech={{ current_tech }}{% endif %}">Last</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+{% csrf_token %}
+{% endblock %}

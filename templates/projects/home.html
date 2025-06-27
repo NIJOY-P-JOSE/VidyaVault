@@ -1,0 +1,264 @@
+{% extends 'base.html' %}
+
+{% block title %}VidyaVault - Home{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-6">
+                <h1 class="display-4 fw-bold mb-4">Showcase Your Academic Excellence</h1>
+                <p class="lead mb-4">VidyaVault is the ultimate platform for college students to upload, explore, and evaluate academic projects. Build your portfolio, get recognized, and connect with peers.</p>
+                <div class="d-flex gap-3">
+                    {% if user.is_authenticated %}
+                        <a href="{% url 'upload_project' %}" class="btn btn-light btn-lg">
+                            <i class="fas fa-upload me-2"></i>Upload Project
+                        </a>
+                        <a href="{% url 'project_list' %}" class="btn btn-outline-light btn-lg">
+                            <i class="fas fa-search me-2"></i>Explore Projects
+                        </a>
+                    {% else %}
+                        <a href="{% url 'register' %}" class="btn btn-light btn-lg">
+                            <i class="fas fa-user-plus me-2"></i>Get Started
+                        </a>
+                        <a href="{% url 'project_list' %}" class="btn btn-outline-light btn-lg">
+                            <i class="fas fa-search me-2"></i>Explore Projects
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="text-center">
+                    <i class="fas fa-laptop-code" style="font-size: 200px; opacity: 0.3;"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Quick Actions -->
+<section class="py-5">
+    <div class="container">
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="card h-100 text-center">
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <i class="fas fa-upload text-primary" style="font-size: 3rem;"></i>
+                        </div>
+                        <h5 class="card-title">Upload Projects</h5>
+                        <p class="card-text">Share your academic projects, mini-projects, and final year work with the community.</p>
+                        {% if user.is_authenticated %}
+                            <a href="{% url 'upload_project' %}" class="btn btn-primary">Upload Now</a>
+                        {% else %}
+                            <a href="{% url 'register' %}" class="btn btn-primary">Sign Up to Upload</a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card h-100 text-center">
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <i class="fas fa-star text-warning" style="font-size: 3rem;"></i>
+                        </div>
+                        <h5 class="card-title">Score Projects</h5>
+                        <p class="card-text">Faculty and admins can review and score projects based on innovation and quality.</p>
+                        {% if user.is_authenticated and user.userprofile.role == 'admin' %}
+                            <a href="{% url 'admin_review' %}" class="btn btn-warning">Review Projects</a>
+                        {% else %}
+                            <a href="{% url 'about' %}" class="btn btn-outline-warning">Learn More</a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card h-100 text-center">
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <i class="fas fa-search text-success" style="font-size: 3rem;"></i>
+                        </div>
+                        <h5 class="card-title">Explore & Learn</h5>
+                        <p class="card-text">Discover amazing projects from your peers and get inspired for your next creation.</p>
+                        <a href="{% url 'project_list' %}" class="btn btn-success">Explore Now</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Statistics Dashboard -->
+<section class="py-5 bg-light">
+    <div class="container">
+        <h2 class="text-center mb-5">Platform Analytics</h2>
+        <div class="row g-4">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>Department Performance</h5>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="departmentChart" height="300"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-code me-2"></i>Popular Technologies</h5>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="techChart" height="300"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Featured Projects -->
+{% if featured_projects %}
+<section class="py-5">
+    <div class="container">
+        <h2 class="text-center mb-5">Featured Projects</h2>
+        <div class="row g-4">
+            {% for project in featured_projects %}
+            <div class="col-md-6 col-lg-4">
+                <div class="card project-card h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h5 class="card-title">{{ project.title }}</h5>
+                            <span class="badge bg-primary">{{ project.get_domain_display }}</span>
+                        </div>
+                        <p class="card-text">{{ project.description|truncatewords:20 }}</p>
+                        <div class="mb-3">
+                            {% for tech in project.get_tech_list %}
+                                <span class="tech-badge">{{ tech }}</span>
+                            {% endfor %}
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <small class="text-muted">
+                                <i class="fas fa-user me-1"></i>{{ project.owner.get_full_name|default:project.owner.username }}
+                            </small>
+                            <div>
+                                <small class="text-muted me-2">
+                                    <i class="fas fa-heart me-1"></i>{{ project.likes.count }}
+                                </small>
+                                <small class="text-muted">
+                                    <i class="fas fa-eye me-1"></i>{{ project.views }}
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-footer bg-transparent">
+                        <a href="{% url 'project_detail' project.pk %}" class="btn btn-outline-primary btn-sm">View Details</a>
+                        {% if project.github_url %}
+                            <a href="{{ project.github_url }}" target="_blank" class="btn btn-outline-dark btn-sm">
+                                <i class="fab fa-github me-1"></i>GitHub
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        <div class="text-center mt-4">
+            <a href="{% url 'project_list' %}" class="btn btn-primary">View All Projects</a>
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- Recent Projects -->
+<section class="py-5 bg-light">
+    <div class="container">
+        <h2 class="text-center mb-5">Recent Projects</h2>
+        <div class="row g-4">
+            {% for project in recent_projects %}
+            <div class="col-md-6 col-lg-3">
+                <div class="card project-card h-100">
+                    <div class="card-body">
+                        <h6 class="card-title">{{ project.title|truncatechars:30 }}</h6>
+                        <p class="card-text small">{{ project.description|truncatewords:10 }}</p>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <small class="text-muted">{{ project.owner.username }}</small>
+                            <small class="text-muted">{{ project.created_at|date:"M d" }}</small>
+                        </div>
+                    </div>
+                    <div class="card-footer bg-transparent">
+                        <a href="{% url 'project_detail' project.pk %}" class="btn btn-outline-primary btn-sm">View</a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Department Performance Chart
+    fetch('/api/department-stats/')
+        .then(response => response.json())
+        .then(data => {
+            const ctx = document.getElementById('departmentChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: data.map(item => item.department),
+                    datasets: [{
+                        label: 'Number of Students',
+                        data: data.map(item => item.count),
+                        backgroundColor: '#004E89',
+                        borderColor: '#00A8E8',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        });
+
+    // Technology Usage Chart
+    fetch('/api/tech-stats/')
+        .then(response => response.json())
+        .then(data => {
+            const ctx = document.getElementById('techChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: data.map(item => item.tech),
+                    datasets: [{
+                        data: data.map(item => item.count),
+                        backgroundColor: [
+                            '#004E89', '#00A8E8', '#FF6B6B', '#4ECDC4',
+                            '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD',
+                            '#98D8C8', '#F7DC6F'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        });
+});
+</script>
+{% endblock %}

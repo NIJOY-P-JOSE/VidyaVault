@@ -1,0 +1,410 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ project.title }} - VidyaVault{% endblock %}
+
+{% block content %}
+
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+
+<style>
+#chat-messages div {
+  padding: 6px 10px;
+  border-radius: 8px;
+  max-width: 90%;
+  word-wrap: break-word;
+}
+
+.text-end {
+  background-color: #e9f5ff;
+  margin-left: auto;
+  text-align: right;
+}
+
+.text-start {
+  background-color: #f1f1f1;
+  margin-right: auto;
+  text-align: left;
+}
+
+  #chat-messages code {
+    background-color: #f1f1f1;
+    color: #d63384;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: Consolas, monospace;
+    font-size: 0.95em;
+  }
+
+  #chat-messages strong {
+    font-weight: bold;
+    color: #0d6efd;
+  }
+
+  #chat-messages p {
+    margin-bottom: 8px;
+  }
+</style>
+
+<div class="container py-5">
+    <div class="row">
+        <!-- Main Content -->
+        <div class="col-lg-8">
+            <!-- Project Header -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div>
+                            <h1 class="display-6">{{ project.title }}</h1>
+                            <p class="text-muted mb-2">
+                                <i class="fas fa-user me-2"></i>by {{ project.owner.get_full_name|default:project.owner.username }}
+                                {% if project.team_members.exists %}
+                                    and {{ project.team_members.count }} team member{{ project.team_members.count|pluralize }}
+                                {% endif %}
+                            </p>
+                            <p class="text-muted">
+                                <i class="fas fa-calendar me-2"></i>{{ project.created_at|date:"F d, Y" }}
+                                <i class="fas fa-tag ms-3 me-2"></i>{{ project.get_domain_display }}
+                            </p>
+                        </div>
+                        <div class="text-end">
+                            {% if project.score %}
+                                <div class="badge bg-success fs-6 mb-2">{{ project.score }}/10</div>
+                            {% else %}
+                                <div class="badge bg-warning fs-6 mb-2">Pending Review</div>
+                            {% endif %}
+                            {% if project.is_featured %}
+                                <div class="badge bg-primary fs-6">Featured</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Stats -->
+                    <div class="d-flex gap-4 mb-3">
+                        <span class="text-muted">
+                            <i class="fas fa-eye me-1"></i>{{ project.views }} views
+                        </span>
+                        <span class="text-muted">
+                            <i class="fas fa-heart me-1"></i><span id="like-count-{{ project.pk }}">{{ project.likes.count }}</span> likes
+                        </span>
+                        <span class="text-muted">
+                            <i class="fas fa-comments me-1"></i>{{ project.comments.count }} comments
+                        </span>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="d-flex gap-2 mb-4">
+                        {% if project.github_url %}
+                            <a href="{{ project.github_url }}" target="_blank" class="btn btn-dark">
+                                <i class="fab fa-github me-2"></i>View on GitHub
+                            </a>
+                        {% endif %}
+                        {% if project.project_file %}
+                            <a href="{{ project.project_file.url }}" class="btn btn-outline-primary" download>
+                                <i class="fas fa-download me-2"></i>Download Files
+                            </a>
+                        {% endif %}
+                        {% if user.is_authenticated %}
+                            <button class="like-btn btn btn-outline-danger" onclick="toggleLike({{ project.pk }})" 
+                                    id="like-btn-{{ project.pk }}">
+                                {% if user_has_liked %}
+                                    <i class="fas fa-heart me-1"></i>Liked
+                                {% else %}
+                                    <i class="far fa-heart me-1"></i>Like
+                                {% endif %}
+                            </button>
+                        {% endif %}
+                    </div>
+                    <!-- AI Chat Button -->
+                    <button class="btn btn-outline-secondary mb-3" onclick="openChatbot()">
+                        <i class="fas fa-robot me-1"></i> Ask AI About This Project
+                    </button>
+
+                    <!-- Chatbot Box -->
+                    <div id="chatbot-box" class="card mb-4 p-3" style="display: none;">
+                        <div id="chat-messages" style="height: 400px; overflow-y: auto;" class="mb-2 border rounded p-2 bg-light"></div>
+                        <div class="input-group">
+                            <textarea id="user-input" class="form-control" placeholder="Ask something about this project..."></textarea>
+                            <button class="btn btn-primary" onclick="sendMessage()">Send</button>
+                        </div>
+                    </div>
+
+
+                    <!-- Description -->
+                    <div class="mb-4">
+                        <h5>Description</h5>
+                        <p class="text-muted">{{ project.description|linebreaks }}</p>
+                    </div>
+
+                    <!-- Tech Stack -->
+                    <div class="mb-4">
+                        <h5>Technologies Used</h5>
+                        <div>
+                            {% for tech in project.get_tech_list %}
+                                <span class="tech-badge me-2 mb-2">{{ tech }}</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <!-- Team Members -->
+                    {% if project.team_members.exists %}
+                    <div class="mb-4">
+                        <h5>Team Members</h5>
+                        <div class="row g-2">
+                            <div class="col-auto">
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-crown text-warning me-2"></i>
+                                    <a href="{% url 'profile' project.owner.username %}" class="text-decoration-none">
+                                        {{ project.owner.get_full_name|default:project.owner.username }}
+                                    </a>
+                                    <small class="text-muted ms-2">(Owner)</small>
+                                </div>
+                            </div>
+                            {% for member in project.team_members.all %}
+                            <div class="col-auto">
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-user text-primary me-2"></i>
+                                    <a href="{% url 'profile' member.username %}" class="text-decoration-none">
+                                        {{ member.get_full_name|default:member.username }}
+                                    </a>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Comments Section -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-comments me-2"></i>Comments & Questions
+                        <span class="badge bg-secondary ms-2">{{ project.comments.count }}</span>
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <!-- Add Comment Form -->
+                    {% if user.is_authenticated %}
+                    <form method="post" action="{% url 'add_comment' project.pk %}" class="mb-4">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            {{ comment_form.content }}
+                        </div>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-paper-plane me-2"></i>Post Comment
+                        </button>
+                    </form>
+                    <hr>
+                    {% else %}
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <a href="{% url 'login' %}">Login</a> to post comments and ask questions.
+                    </div>
+                    {% endif %}
+
+                    <!-- Comments List -->
+                    {% if comments %}
+                        {% for comment in comments %}
+                        <div class="d-flex mb-4">
+                            <div class="flex-shrink-0">
+                                <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                    <i class="fas fa-user"></i>
+                                </div>
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <h6 class="mb-0">{{ comment.author.get_full_name|default:comment.author.username }}</h6>
+                                    <small class="text-muted">{{ comment.created_at|timesince }} ago</small>
+                                </div>
+                                <p class="mb-2">{{ comment.content|linebreaks }}</p>
+                                
+                                <!-- Replies -->
+                                {% for reply in comment.replies.all %}
+                                <div class="d-flex mt-3 ms-4">
+                                    <div class="flex-shrink-0">
+                                        <div class="bg-secondary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 30px; height: 30px;">
+                                            <i class="fas fa-reply"></i>
+                                        </div>
+                                    </div>
+                                    <div class="flex-grow-1 ms-2">
+                                        <div class="d-flex justify-content-between align-items-center mb-1">
+                                            <small class="fw-bold">{{ reply.author.get_full_name|default:reply.author.username }}</small>
+                                            <small class="text-muted">{{ reply.created_at|timesince }} ago</small>
+                                        </div>
+                                        <p class="small mb-0">{{ reply.content|linebreaks }}</p>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                                
+                                <!-- Reply Form -->
+                                {% if user.is_authenticated %}
+                                <button class="btn btn-outline-primary btn-sm mt-2" onclick="toggleReplyForm({{ comment.id }})">
+                                    <i class="fas fa-reply me-1"></i>Reply
+                                </button>
+                                <form method="post" action="{% url 'add_comment' project.pk %}" class="mt-2 d-none" id="reply-form-{{ comment.id }}">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="parent_id" value="{{ comment.id }}">
+                                    <div class="input-group">
+                                        <textarea class="form-control" name="content" rows="2" placeholder="Write a reply..."></textarea>
+                                        <button type="submit" class="btn btn-primary">Reply</button>
+                                    </div>
+                                </form>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% if not forloop.last %}<hr>{% endif %}
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-comments text-muted" style="font-size: 3rem;"></i>
+                            <h6 class="mt-3 text-muted">No comments yet</h6>
+                            <p class="text-muted">Be the first to comment or ask a question!</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Project Owner -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h6 class="mb-0">Project Owner</h6>
+                </div>
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <i class="fas fa-user-circle text-primary" style="font-size: 4rem;"></i>
+                    </div>
+                    <h6>{{ project.owner.get_full_name|default:project.owner.username }}</h6>
+                    <p class="text-muted small">
+                        {{ project.owner.userprofile.department|default:"Student" }}
+                        {% if project.owner.userprofile.batch %}
+                            <br>{{ project.owner.userprofile.batch }}
+                        {% endif %}
+                    </p>
+                    <a href="{% url 'profile' project.owner.username %}" class="btn btn-outline-primary btn-sm">
+                        <i class="fas fa-user me-1"></i>View Profile
+                    </a>
+                </div>
+            </div>
+
+            <!-- Project Stats -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h6 class="mb-0">Project Statistics</h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Views:</span>
+                        <strong>{{ project.views }}</strong>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Likes:</span>
+                        <strong>{{ project.likes.count }}</strong>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Comments:</span>
+                        <strong>{{ project.comments.count }}</strong>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Score:</span>
+                        <strong>
+                            {% if project.score %}
+                                {{ project.score }}/10
+                            {% else %}
+                                Pending
+                            {% endif %}
+                        </strong>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span>Created:</span>
+                        <strong>{{ project.created_at|date:"M d, Y" }}</strong>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Related Projects -->
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">More from {{ project.owner.get_full_name|default:project.owner.username }}</h6>
+                </div>
+                <div class="card-body">
+                    {% with other_projects=project.owner.project_set.all|slice:":3" %}
+                        {% for other_project in other_projects %}
+                            {% if other_project.pk != project.pk %}
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="flex-shrink-0">
+                                    <i class="fas fa-project-diagram text-primary"></i>
+                                </div>
+                                <div class="flex-grow-1 ms-3">
+                                    <h6 class="mb-0">
+                                        <a href="{% url 'project_detail' other_project.pk %}" class="text-decoration-none">
+                                            {{ other_project.title|truncatechars:30 }}
+                                        </a>
+                                    </h6>
+                                    <small class="text-muted">{{ other_project.get_domain_display }}</small>
+                                </div>
+                            </div>
+                            {% endif %}
+                        {% endfor %}
+                    {% endwith %}
+                    <a href="{% url 'profile' project.owner.username %}" class="btn btn-outline-primary btn-sm w-100">
+                        View All Projects
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% csrf_token %}
+
+<script>
+function toggleReplyForm(commentId) {
+    const form = document.getElementById(`reply-form-${commentId}`);
+    form.classList.toggle('d-none');
+}
+
+let projectId = {{ project.id }};
+
+function openChatbot() {
+  const box = document.getElementById("chatbot-box");
+  box.style.display = box.style.display === "none" ? "block" : "none";
+}
+
+function sendMessage() {
+  const input = document.getElementById("user-input");
+  const chatBox = document.getElementById("chat-messages");
+  const message = input.value.trim();
+  if (!message) return;
+
+  // Show user message (right-aligned)
+  chatBox.innerHTML += `<div class="text-end text-primary mb-2"><strong>You:</strong> ${message}</div>`;
+  input.value = "";
+
+  fetch(`/chatbot/${projectId}/`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-CSRFToken": "{{ csrf_token }}"
+    },
+    body: JSON.stringify({ question: message })
+  })
+  .then(response => response.json())
+  .then(data => {
+    // Convert markdown to HTML using marked.js
+    const formattedAnswer = marked.parse(data.answer);
+    chatBox.innerHTML += `<div class="text-start text-dark mb-3"><strong>Bot:</strong> ${formattedAnswer}</div>`;
+    chatBox.scrollTop = chatBox.scrollHeight;
+  })
+  .catch(error => {
+    chatBox.innerHTML += `<div class="text-start text-danger"><strong>Bot:</strong> Error occurred.</div>`;
+  });
+}
+
+</script>
+
+{% endblock %}
