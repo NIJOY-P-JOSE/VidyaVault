@@ -95,23 +95,42 @@ VidyaVault includes an AI assistant on each project page using **Google’s Gemi
 ## 📁 Folder Structure
 
 ```text
-vidyavault-genai/
-├── .env
-├── requirements.txt
-├── manage.py
+vidyavault/
+├── manage.py                   # Django project starter
+├── .env                        # Contains secrets like GOOGLE_API_KEY
 │
-├── templates/              # Base + chatbot UI
-├── static/                 # CSS/JS
+├── vidyavault/                 # Project settings and URL configurations
+│   ├── __init__.py
+│   ├── settings.py
+│   ├── urls.py
+│   └── wsgi.py
 │
-├── vidyavault/             # Django settings
-│   └── settings.py
+├── projects/                   # Main Django app
+│   ├── models.py               # Project, Score, Comment models
+│   ├── views.py                # Views for listing, detail, upload, etc.
+│   ├── chatbot_gemini.py       # Gemini API integration
+│   ├── urls.py                 # App-specific URLs
 │
-├── projects/               # Main app
-│   ├── chatbot_gemini.py   # Gemini API logic
-│   ├── views.py
-│   ├── models.py
-│   └── templates/
+├── templates/
+│   ├── base.html               # Base layout
+│   ├── registration/          # Auth pages
+│   │   ├── login.html
+│   │   └── register.html
+│   └── projects/              # Project-related templates
+│       ├── home.html
+│       ├── about.html
+│       ├── dashboard.html
+│       ├── leaderboard.html
+│       ├── profile.html
+│       ├── project_detail.html
+│       ├── project_list.html
+│       ├── upload_project.html
+│       ├── admin_review.html
+│       ├── score_project.html
+│
+└── media/                      # Uploaded project files
 ```
+
 
 ---
 
