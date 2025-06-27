@@ -153,12 +153,6 @@ python manage.py runserver
 
 ---
 
-## 🧑‍💻 Built For
-
-This project was created as part of the **GenAI Exchange Bootcamp** hosted by **Google** and **Hack2Skill**. The goal was to integrate Google AI tools into a real-world application and explore open innovation using Gemini and Vertex AI.
-
----
-
 ## 📽️ Demo Video
 
 🎥 [Add your demo video link here]
@@ -168,5 +162,4 @@ This project was created as part of the **GenAI Exchange Bootcamp** hosted by **
 ## 🙋 Contact
 
 - **Name**: Nijoy P Jose  
-- **Email**: [your email or LinkedIn]  
-- **Bootcamp**: GenAI Exchange 2024
+- **Email**: nijoypjose@gmail.com 
