@@ -138,8 +138,8 @@ vidyavault/
 
 ```bash
 # Clone repo
-git clone https://github.com/yourusername/vidyavault-genai.git
-cd vidyavault-genai
+git clone https://github.com/NIJOY-P-JOSE/VidyaVault.git
+cd VidyaVault
 
 # Install dependencies
 pip install -r requirements.txt
