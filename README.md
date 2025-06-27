@@ -1,1 +1,153 @@
-# VidyaVault
+# 🎓 VidyaVault (Gemini-Powered)
+
+> *An academic project showcase platform powered by Django — now enhanced with Google Gemini via Vertex AI for smarter project exploration.*
+
+---
+
+## 🧠 Project Overview
+
+**VidyaVault** is a Django-based platform that allows students to upload and showcase their final-year or academic projects. It enables users to explore peer submissions, receive structured faculty evaluations, and view performance through dashboards and leaderboards.
+
+💡 In this GenAI-enhanced version, VidyaVault integrates a **Gemini-powered chatbot** (via Vertex AI) that helps users **understand each project** by analyzing its README and code. It acts as a learning companion for students, giving instant explanations and summaries.
+
+---
+
+## 🚀 Key Features
+
+- 📤 Upload and manage academic/final-year projects  
+- 🔍 Explore peer submissions with filters and search  
+- 🧑‍🏫 Faculty scoring system  
+- 📈 Dashboard for participation and tech usage  
+- 🏆 Leaderboard based on scores and likes  
+- 💬 Comment system with threaded replies  
+- 🤖 **Gemini AI assistant**: Ask questions about the project
+
+---
+
+## 🤖 Gemini AI Integration (via Vertex AI)
+
+VidyaVault includes an AI assistant on each project page using **Google’s Gemini API**:
+
+| Feature | Description |
+|--------|-------------|
+| 💬 Chat with AI | Ask questions about the project README/code |
+| 🧠 Model | `gemini-1.5-flash` via Vertex AI |
+| 🛡️ Privacy | Chat resets on reload; no history stored |
+| 📚 Scope | Only project-specific files like `README.md`, `.py`, `.html` |
+| 📎 Prompting | Injects system instructions to restrict scope and ensure relevance |
+
+> This integration enhances the learning experience by enabling contextual Q&A without altering the original project code.
+
+---
+
+## 🔧 Technical Stack
+
+### ✅ Backend
+
+- **Framework**: Django 4.2  
+- **Language**: Python 3.10+  
+- **Database**: SQLite (dev) / PostgreSQL (prod)  
+- **Auth**: Django's User model + custom roles  
+- **AI API**: Google Gemini via `google-generativeai` Python SDK  
+- **.env**: Securely stores `GOOGLE_API_KEY`
+
+### ⚙️ Core Models
+
+| Model | Purpose |
+|-------|---------|
+| `Project` | Stores metadata, team, GitHub link |
+| `UserProfile` | User role, batch, department |
+| `ProjectScore` | Faculty evaluation |
+| `Comment` | Threaded discussions |
+
+---
+
+## 🎨 Frontend
+
+- **Bootstrap 5** for layout and responsive UI  
+- **Font Awesome** for icons  
+- **Django Templates** for page structure  
+- **JavaScript**: Chatbot UI and fetch logic  
+- **Markdown support** using `marked.js` in chatbot replies
+
+---
+
+## 📊 Dashboard Features
+
+- Charts: Department-wise participation  
+- Tech stack usage visualization  
+- Skills word cloud from project tags  
+
+---
+
+## 🧠 AI Assistant Flow
+
+1. User clicks "Ask AI About This Project"
+2. Enters a question related to the project (e.g., "What does this project do?")
+3. Django backend builds a prompt using:
+   - Static instruction
+   - README/code content (retrieved or embedded)
+4. Gemini responds with an explanation or breakdown
+5. UI shows formatted response with Markdown support
+
+---
+
+## 📁 Folder Structure
+
+```text
+vidyavault-genai/
+├── .env
+├── requirements.txt
+├── manage.py
+│
+├── templates/              # Base + chatbot UI
+├── static/                 # CSS/JS
+│
+├── vidyavault/             # Django settings
+│   └── settings.py
+│
+├── projects/               # Main app
+│   ├── chatbot_gemini.py   # Gemini API logic
+│   ├── views.py
+│   ├── models.py
+│   └── templates/
+```
+
+---
+
+## 🧪 Setup & Run
+
+```bash
+# Clone repo
+git clone https://github.com/yourusername/vidyavault-genai.git
+cd vidyavault-genai
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Create a .env file with your Google Gemini API key
+echo "GOOGLE_API_KEY=your_api_key" > .env
+
+# Run server
+python manage.py runserver
+```
+
+---
+
+## 🧑‍💻 Built For
+
+This project was created as part of the **GenAI Exchange Bootcamp** hosted by **Google** and **Hack2Skill**. The goal was to integrate Google AI tools into a real-world application and explore open innovation using Gemini and Vertex AI.
+
+---
+
+## 📽️ Demo Video
+
+🎥 [Add your demo video link here]
+
+---
+
+## 🙋 Contact
+
+- **Name**: Nijoy P Jose  
+- **Email**: [your email or LinkedIn]  
+- **Bootcamp**: GenAI Exchange 2024
