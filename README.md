@@ -155,7 +155,10 @@ python manage.py runserver
 
 ## 📽️ Demo Video
 
-🎥 [Add your demo video link here]
+
+https://github.com/user-attachments/assets/194c3093-9bbc-414b-a0b4-da881228da45
+
+
 
 ---
 
