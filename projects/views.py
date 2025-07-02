@@ -11,28 +11,13 @@ from .models import Project, UserProfile, Comment, ProjectScore
 from .forms import ProjectForm, UserRegistrationForm, CommentForm, ProjectScoreForm
 from collections import Counter
 import json
-
-
-
-
 import os
-
 import base64
 import requests
 from django.views.decorators.csrf import csrf_exempt
 from django.conf import settings
-
-
-# Fetch README.md from GitHub
-import os
-import requests
-import base64
-
-
-
-
-from django.shortcuts import render
 from .chatbot_gemini import ask_gemini
+
 
 
 def chatbot_view(request):
@@ -114,7 +99,6 @@ def call_ai_model(question, context):
     return ask_gemini(prompt)
 
 
-
 # This function builds context from GitHub, adds user question, and gets AI answer
 @csrf_exempt
 def project_chatbot(request, project_id):
@@ -147,8 +131,6 @@ def project_chatbot(request, project_id):
             return JsonResponse({"answer": f"Error occurred: {str(e)}"}, status=500)
 
     return JsonResponse({"error": "Invalid request method."}, status=400)
-
-
 
 
 
