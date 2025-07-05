@@ -19,7 +19,6 @@ from django.conf import settings
 from .chatbot_gemini import ask_gemini
 
 
-
 def chatbot_view(request):
     response = None
     if request.method == "POST":
@@ -92,7 +91,6 @@ def fetch_github_readme(project):
         return f"(Error fetching GitHub content: {e})"
 
 
-
 # Call AI model with context
 def call_ai_model(question, context):
     prompt = f"Context:\n{context}\n\nQuestion: {question}\nAnswer:"
@@ -131,7 +129,6 @@ def project_chatbot(request, project_id):
             return JsonResponse({"answer": f"Error occurred: {str(e)}"}, status=500)
 
     return JsonResponse({"error": "Invalid request method."}, status=400)
-
 
 
 def home(request):
