@@ -5,3 +5,4 @@ google-generativeai
 requests
 psycopg2-binary
 dj-database-url
+gunicorn
