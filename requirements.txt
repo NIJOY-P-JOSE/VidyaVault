@@ -3,3 +3,5 @@ Pillow==10.4.0
 python-dotenv
 google-generativeai
 requests
+psycopg2-binary
+dj-database-url
