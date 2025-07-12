@@ -79,3 +79,10 @@ TIME_ZONE = 'UTC'
 USE_I18N = True
 USE_TZ = True
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+# External API Keys
+GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY", "")
+TOGETHER_API_KEY = os.getenv("TOGETHER_API_KEY", "")
+GITHUB_API_TOKEN = os.getenv("GITHUB_API_TOKEN", "")
+
