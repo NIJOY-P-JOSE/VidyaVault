@@ -1,11 +1,16 @@
 import google.generativeai as genai
 from django.conf import settings
 
-genai.configure(api_key=settings.GOOGLE_API_KEY)
-model = genai.GenerativeModel("models/gemini-1.5-flash")
+model = None  # Will be initialized inside function
+
 
 def ask_gemini(user_prompt):
+    global model
     try:
+        if model is None:
+            genai.configure(api_key=settings.GOOGLE_API_KEY)
+            model = genai.GenerativeModel("models/gemini-1.5-flash")
+
         # Simple greetings — short friendly reply
         simple_greetings = ["hi", "hello", "hey", "good morning", "good evening", "good afternoon"]
         if user_prompt.strip().lower() in simple_greetings:
