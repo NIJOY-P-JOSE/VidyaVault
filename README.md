@@ -10,6 +10,8 @@
 
 💡 In this GenAI-enhanced version, VidyaVault integrates a **Gemini-powered chatbot** (via Vertex AI) that helps users **understand each project** by analyzing its README and code. It acts as a learning companion for students, giving instant explanations and summaries.
 
+[![Live Site](https://img.shields.io/badge/Live%20Site-Visit-blue)](https://vidyavault-ifq8.onrender.com)
+
 ---
 
 ## 🚀 Key Features
