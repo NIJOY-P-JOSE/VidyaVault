@@ -127,7 +127,6 @@ def project_chatbot(request, project_id):
             return JsonResponse({"answer": "Project not found."}, status=404)
         except Exception as e:
             return JsonResponse({"answer": f"Error occurred: {str(e)}"}, status=500)
-
     return JsonResponse({"error": "Invalid request method."}, status=400)
 
 
